@@ -32,6 +32,7 @@ This document will walk through deployment steps, and highlight potential pitfal
   - [Public AMIs](#public-amis)
     - [Hail with VEP](#hail-with-vep)
     - [Hail Only](#hail-only)
+  - [Stack Removal](#stack-removal)
 
 ## Deployment Guide
 
@@ -107,7 +108,7 @@ The following scaling actions are set by default:
 
 ## SageMaker Notebook Overview
 
-The Service Catalog product for the SageMaker Notebook Instance deploys a single notebook instance in the same subnet as your EMR cluster.  Upon launch, several example notebooks are seeded into the `common-notebooks` folder.  These example notebooks offer an immediate orentation interacting with your Hail EMR Cluster.
+The Service Catalog product for the SageMaker Notebook Instance deploys a single notebook instance in the same subnet as your EMR cluster.  Upon launch, several example notebooks are seeded into the `common-notebooks` folder.  These example notebooks offer an immediate orientation interacting with your Hail EMR Cluster.
 
 ### SSM Access
 
@@ -164,3 +165,17 @@ Public AMIs are available in specific regions. Select the AMI for your target re
 | us-east-2      | 0.2.37       | 5.29.0      | ami-0377c5c1a13b4198a |
 | us-west-1      | 0.2.37       | 5.29.0      | ami-0998c9b84d9d9fd93 |
 | us-west-2      | 0.2.37       | 5.29.0      | ami-0dc94d5d800f0e6e9 |
+
+## Stack Removal
+
+Prior to removing the CloudFormation stack any Service Catalog principal associations must be removed.
+
+Navigate to the Service Catalog portfolio via the AWS console or via the CloudFormation stack output direct link.
+
+![cloudformation-primary-stack-outputs](docs/images/deployment/cloudformation-primary-stack-outputs.png)
+
+Remove all of the `Groups, roles, and users` and `Share` entires.
+
+![service-catalog-remove-assignments](docs/images/removal/service-catalog-remove-assignments.png)
+
+Once complete, proceed with the removal of the top-level CloudFormation stack.  Any S3 buckets created by the deployment are retained and may be manually removed.
