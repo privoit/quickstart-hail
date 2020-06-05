@@ -268,7 +268,7 @@ Resources:
         Image: alpine
         PrivilegedMode: true
         Type: "LINUX_CONTAINER"
-      Name: "hail-master_vep"
+      Name: "hail-master-vep"
       ServiceRole: !GetAtt roleHailPacker.Arn
       Source:
         BuildSpec: "buildspec.yml"
