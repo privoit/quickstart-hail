@@ -7,6 +7,11 @@
 
 REPOSITORY_URL="https://github.com/hail-is/hail.git"
 
+# date is appended to ami_name to prevent collision with public AMIs
+if [ -z "$TRAILING_DATE" ]; then
+    TRAILING_DATE=true
+fi
+
 usage(){
 cat <<EOF
 
@@ -86,9 +91,15 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
+        --no-trailing-date)
+            TRAILING_DATE=false
+            shift
+            shift
+            ;;
     esac
 done
 
+DATE=$(date +%Y%m%d)
 HAIL_NAME_VERSION="$HAIL_VERSION"  # Used by AMI name
 
 if [ -z "$HAIL_VERSION" ]; then
@@ -102,6 +113,10 @@ if [ -z "$VEP_VERSION" ] || [ "$VEP_VERSION" == "" ]; then
 else
     # Add vep version to AMI name if enabled
     HAIL_NAME_VERSION="$HAIL_NAME_VERSION-vep-$VEP_VERSION"
+fi
+
+if [ "$TRAILING_DATE" = true ]; then
+    HAIL_NAME_VERSION="$HAIL_NAME_VERSION-$DATE"
 fi
 
 if [ "$SUBNET_TYPE" == "public" ]; then
