@@ -1,84 +1,50 @@
 # Hail AMI Creation via AWS CodeBuild
 
+The Quick Start creates AWS CodeBuild Projects that allow AMI creation with specific combinations of [Hail](https://hail.is), [Spark](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark.html), and [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html).
+
+The build process leverages [Packer](https://www.packer.io) for AMI creation.  As part of the Quick Start deployment, your Hail bucket is seeded with a zip file of the Quick Start's `packer` folder.  This zip contains a JSON build template, variables file, and scripts to execute during the build process.
+
+Builds may optionally include [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html) and [LOFTEE](https://github.com/konradjk/loftee).  VEP and LOFTEE are taken from the [Registry of Open Data on AWS](https://registry.opendata.aws/hail-vep-pipeline/) and added to the AMI.  The following species are included:
+
+- Zebrafish (Danio rerio) [GRCz11](http://uswest.ensembl.org/Danio_rerio/Info/Index)
+- Human (Homo sapiens) [GRCh38](http://uswest.ensembl.org/Homo_sapiens/Info/Index)
+- Human (Homo sapiens) [GRCh37](https://grch37.ensembl.org/Homo_sapiens/Info/Index)
+- Rat (Rattus norvegicus) [Rnor_6.0](https://uswest.ensembl.org/Rattus_norvegicus/Info/Index)
+
 ## Table of Contents
 
 - [Hail AMI Creation via AWS CodeBuild](#hail-ami-creation-via-aws-codebuild)
-  - [Description](#description)
-  - [Prerequisites](#prerequisites)
-  - [Deployment](#deployment)
+  - [Table of Contents](#table-of-contents)
   - [Building](#building)
-
-## Description
-
-A CloudFormation template will deploy AWS CodeBuild Projects that can be used to build specific combinations of [Hail](https://hail.is), [Spark](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark.html), and [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html).  The local packer folder is zipped and pushed to an S3 bucket to be used as the build source.
-
-The Hail master branch HEAD can be used as a build source by **omitting** the `HAIL_VERSION` variable from your CodeBuild Project in CloudFormation.
-
-[VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html) installation can also be excluded by **omitting** the `VEP_VERSION` environment variable.
-
-## Prerequisites
-
-- `hail-ami.yml` CloudFormation template successfully deployed
-- If using [VEP](https://useast.ensembl.org/info/docs/tools/vep/index.html), the VEP GRCh37 cache, GRCh38 cache, and LOFTEE data files archives must be in your Hail S3 bucket.  Review the [VEP pre-installation instructions](vep-install.md) for details.
-- AWS CLI profile with access to copy files to the S3 bucket/path specified in the CloudFormation template
-
-## Deployment
-
-Each time a file changes under the `packer` directory you must zip and push directory up to S3.  CodeBuild will pull this zip file in for each build.
-
-From the `hail/packer` directory, zip the contents and move it to an S3 bucket/key that matches the parameters set in your CloudFormation.
-
-```bash
-14:31 $ zip packer.zip -r ./
-  adding: codebuild/ (stored 0%)
-  adding: codebuild/buildspec.yml (deflated 38%)
-  adding: readme.md (deflated 63%)
-  adding: build-wrapper.sh (deflated 65%)
-  adding: builds/ (stored 0%)
-  adding: builds/emr-5.28.0.vars (deflated 40%)
-  adding: builds/emr-5.29.0.vars (deflated 40%)
-  adding: builds/emr-5.25.0.vars (deflated 40%)
-  adding: builds/emr-5.27.0.vars (deflated 40%)
-  adding: builds/vpcs/ (stored 0%)
-  adding: builds/vpcs/vpc01.vars (deflated 18%)
-  adding: builds/vpcs/vpc01.vars.example (deflated 33%)
-  adding: docs/ (stored 0%)
-  adding: docs/vep-install.md (deflated 76%)
-  adding: docs/hail-ami.md (deflated 59%)
-  adding: docs/images/ (stored 0%)
-  adding: docs/images/codebuild_environment_override.png (deflated 7%)
-  adding: docs/images/codebuild_running.png (deflated 7%)
-  adding: docs/images/codebuild_start.png (deflated 1%)
-  adding: scripts/ (stored 0%)
-  adding: scripts/cluster_manifest.sh (deflated 57%)
-  adding: scripts/ami_cleanup.sh (deflated 37%)
-  adding: scripts/samtools.sh (deflated 39%)
-  adding: scripts/htslib.sh (deflated 42%)
-  adding: scripts/hail_build.sh (deflated 56%)
-  adding: scripts/vep_install.sh (deflated 66%)
-  adding: scripts/R_install.R (deflated 32%)
-  adding: amazon-linux.json (deflated 70%)
-14:35 $ aws s3 mv packer.zip s3://YOUR-BUCKET/ami/packer.zip
-move: ./packer.zip to s3://YOUR-BUCKET/ami/packer.zip
-```
+  - [Customization](#customization)
 
 ## Building
 
 Before building, keep the following in mind:
 
-- Builds can take upwards of 90 minutes.
-- AMI names are unique.  If building an updated AMI, deregister the previous.
+- Hail builds may take up to 30 minutes.  Builds with VEP may take upwards of 120 minutes.
+- AMI names are unique.  If building an updated AMI for a pre-existing configuration, de-register the previous.
 
 From the AWS CodeBuild dashboard, select **Build projects** then the desired build's radio button and click **Start build**.
 
-![codebuild_1](images/codebuild_start.png)
+![codebuild_1](images/ami/codebuild_start.png)
 
-On the next page open the **Environment vairable override** section and enter values specific to your build.
+On the next page open the **Environment variable override** section and enter values specific to your build.
 
-The `VEP_VERSION` identifies what version of VEP the build will pull from the `RODA_BUCKET`.  Values in red should be updated on each build based on files you've updated or included in your `packer.zip` upload. Values in green should not require adjustment unless you've explictly customized the CloudFormation templates.
+The `VEP_VERSION` identifies the version of VEP the build will use from the `RODA_BUCKET`. The Hail and VEP versions should be explicitly set on each build.  Other variables should not require adjustments from the defaults, but may be overridden for customization.
 
-![codebuild_2](images/codebuild_environment_override.png)
+![codebuild_2](images/ami/codebuild_environment_override.png)
 
-Once the build beings you can optionally tail logs to view progress.  Closing this window will not terminate the build.
+Once the build begins you can optionally tail logs to view progress.  Closing this window will not terminate the build.
 
-![codebuild_3](images/codebuild_running.png)
+![codebuild_3](images/ami/codebuild_running.png)
+
+Once the build completes the AMI will be listed in the EC2 dashboard's AMI pane.  Once in the AMI pane, select `Owned By Me` to limit AMIs to your account.  Note that the Hail AMI tags will reference many of the environment variables set during the build process.
+
+Use the AMI ID in the `Custom AMI` field when deploying your Hail Cluster.
+
+![ec2-ami](images/ami/ec2-ami.png)
+
+## Customization
+
+Builds may be further customized by expanding upon the contents of the packer directory.  After making changes to this directory on your local system, zip the `packer` directory and upload it to `s3://<YOUR_HAIL_BUCKET>/ami/packer.zip`.  Executing a new build will use the updated zip as the build source.

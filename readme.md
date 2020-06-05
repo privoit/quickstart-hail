@@ -8,7 +8,7 @@ To integrate Hail and EMR, we leverage [Packer](https://www.packer.io/) from Has
 
 Users leverage an AWS SageMaker Notebook Instance to run JupyterLab, and pass commands to Hail from the notebook via [Apache Livy](https://livy.incubator.apache.org/).
 
-This repository contains an AWS quickstart solution for rapid deployment into your AWS account. Certain parts of this repository assume a working knowledge of:  AWS, CloudFormation, S3, EMR, Hail, Jupyter, SageMaker, EC2, Packer, and shell scripting.
+This repository contains an AWS Quick Start solution for rapid deployment into your AWS account. Certain parts of this repository assume a working knowledge of:  AWS, CloudFormation, S3, EMR, Hail, Jupyter, SageMaker, EC2, Packer, and shell scripting.
 
 The core directories in this repository are:
 
@@ -26,7 +26,7 @@ This document will walk through deployment steps, and highlight potential pitfal
   - [Table of Contents](#table-of-contents)
   - [Deployment Guide](#deployment-guide)
   - [EMR Overview](#emr-overview)
-    - [Autoscaling Task Nodes](#autoscaling-task-nodes)
+    - [Auto Scaling Task Nodes](#auto-scaling-task-nodes)
   - [SageMaker Notebook Overview](#sagemaker-notebook-overview)
     - [SSM Access](#ssm-access)
   - [Public AMIs](#public-amis)
@@ -87,7 +87,7 @@ To deploy Hail on EMR, follow these steps:
 
 ## EMR Overview
 
-The Service Catalog product for the Hail EMR cluster will deploy a single master node, a minimum of 1 core node, and optional autoscaling task nodes.
+The Service Catalog product for the Hail EMR cluster will deploy a single master node, a minimum of 1 core node, and optional auto scaling task nodes.
 
 The [AWS Systems Manager Agent](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent.html) (SSM) can be used to gain ingress to the EMR nodes.  This agent is pre-installed on the AMI.  To allow SageMaker notebook instance to connect to the Hail cluster nodes, set the following parameter to `true`.
 
@@ -95,7 +95,7 @@ The [AWS Systems Manager Agent](https://docs.aws.amazon.com/systems-manager/late
 
 Notebook service catalog deployments will also require a parameter adjustment to complete access.
 
-### Autoscaling Task Nodes
+### Auto Scaling Task Nodes
 
 Task nodes can be set to `0` to omit them.   The target market, `SPOT` or `ON_DEMAND`, is also set via parameters.  If `SPOT` is selected, the bid price is set to the current on demand price of the selected instance type.
 
@@ -121,7 +121,7 @@ Example connection from Jupyter Lab shell:
 
 ## Public AMIs
 
-Public AMIs are available in specific regions. Select the AMI for your target region and deploy with the noted version of EMR for best results.
+Public AMIs are available in specific regions. Select the AMI for your target region and deploy with the noted version of EMR for best results.  If a custom AMI is desired, see the [CodeBuild AMI Creation Documentation](docs/hail-ami.md).
 
 ### Hail with VEP
 
